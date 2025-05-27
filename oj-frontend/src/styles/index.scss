@@ -1,0 +1,42 @@
+// 引入 Element Plus 基础样式 (如果按需导入插件未处理，则需要手动引入)
+// @import 'element-plus/dist/index.css'; // 完整引入时在 main.ts 中引入
+
+// 引入 Element Plus 暗黑模式样式 (如果需要)
+// @import "element-plus/theme-chalk/dark/css-vars.css";
+
+// 全局重置或基础样式
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+    'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: #333; // 基础字体颜色
+  background-color: #fff; // 基础背景色
+}
+
+#app {
+  min-height: 100vh;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+// Element Plus 样式覆盖示例 (通过 CSS 变量)
+// :root {
+//   --el-color-primary: #your-primary-color;
+//   --el-font-size-base: 14px;
+// }
+
+// 通用工具类
+
+
+.text-center {
+text-align: center;
+}
+.mt-1 { margin-top: 8px; }
+.mb-1 { margin-bottom: 8px; }
+//... 更多工具类

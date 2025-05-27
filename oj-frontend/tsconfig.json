@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "strict": true,
+    "jsx": "preserve",
+    "sourceMap": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "lib": ["ESNext", "DOM"],
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"] // 配合 Vite 的别名配置
+    },
+    "types": ["vite/client"] // 确保 Vite 客户端类型被识别
+  },
+  "include": ["src/**/*.ts",
+             "src/**/*.d.ts",
+              "src/**/*.tsx", 
+              "src/**/*.vue",
+              "src/auto-imports.d.ts", // 添加自动生成的声明文件
+              "src/components.d.ts"    // 添加自动生成的声明文件
+],
+//  "references": [{ "path": "./tsconfig.node.json" }]
+}
