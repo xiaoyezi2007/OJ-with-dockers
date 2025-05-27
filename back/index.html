@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Validator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .upload-section, .verify-section {
+            margin-bottom: 30px;
+        }
+
+        .file-input {
+            margin: 10px 0;
+        }
+
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #45a049;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+        }
+
+        .success {
+            background: #dff0d8;
+            color: #3c763d;
+        }
+
+        .error {
+            background: #f2dede;
+            color: #a94442;
+        }
+
+        .output {
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Code Validator</h1>
+        
+        <!-- 文件上传部分 -->
+        <div class="upload-section">
+            <h2>1. 上传文件</h2>
+            <input type="file" id="codeFile" class="file-input" accept=".c">
+            <input type="file" id="outputFile" class="file-input" accept=".txt">
+            <button onclick="uploadFiles()">上传文件</button>
+            <div id="uploadResult"></div>
+        </div>
+
+        <!-- 验证部分 -->
+        <div class="verify-section">
+            <h2>2. 验证代码</h2>
+            <button onclick="verifyCode()" id="verifyBtn" disabled>执行验证</button>
+            <div id="verificationResult" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentCodeId = null;
+
+        // 文件上传处理
+        async function uploadFiles() {
+            const codeFile = document.getElementById('codeFile').files[0];
+            const outputFile = document.getElementById('outputFile').files[0];
+            
+            if (!codeFile || !outputFile) {
+                alert("请同时选择代码文件和预期输出文件");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('code', codeFile);
+            formData.append('expectedOutput', outputFile);
+
+            try {
+                const response = await fetch('http://localhost:3000/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    currentCodeId = data.codeId;
+                    document.getElementById('verifyBtn').disabled = false;
+                    document.getElementById('uploadResult').innerHTML = `
+                        <p>✅ 文件上传成功！</p>
+                        <p>代码ID: ${data.codeId}</p>
+                        <p>输出ID: ${data.outputId}</p>
+                    `;
+                } else {
+                    throw new Error(data.error || '上传失败');
+                }
+            } catch (error) {
+                document.getElementById('uploadResult').innerHTML = `
+                    <div class="error">❌ 错误: ${error.message}</div>
+                `;
+            }
+        }
+
+        // 代码验证处理
+        async function verifyCode() {
+            if (!currentCodeId) {
+                alert("请先上传文件");
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:3000/verify/${currentCodeId}`, {
+                    method: 'POST'
+                });
+
+                const data = await response.json();
+                const resultDiv = document.getElementById('verificationResult');
+                resultDiv.className = 'result';
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <h3>验证结果：${data.match ? '✅ 匹配成功' : '❌ 匹配失败'}</h3>
+                        <div class="output">
+                            <h4>实际输出：</h4>
+                            ${data.actual}
+                            <h4>预期输出：</h4>
+                            ${data.expected}
+                        </div>
+                    `;
+                    resultDiv.classList.add(data.match ? 'success' : 'error');
+                } else {
+                    throw new Error(data.error || '验证失败');
+                }
+            } catch (error) {
+                document.getElementById('verificationResult').innerHTML = `
+                    <div class="error">❌ 错误: ${error.message}</div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
