@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -17,10 +18,11 @@
             background: white;
             padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
-        .upload-section, .verify-section {
+        .upload-section,
+        .verify-section {
             margin-bottom: 30px;
         }
 
@@ -64,15 +66,26 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <h1>Code Validator</h1>
-        
+
         <!-- 文件上传部分 -->
         <div class="upload-section">
             <h2>1. 上传文件</h2>
-            <input type="file" id="codeFile" class="file-input" accept=".c">
-            <input type="file" id="outputFile" class="file-input" accept=".txt">
+            <div>
+                <label>代码文件 (.c):</label>
+                <input type="file" id="codeFile" accept=".c">
+            </div>
+            <div>
+                <label>输入文件 (可选):</label>
+                <input type="file" id="inputFile" accept=".txt">
+            </div>
+            <div>
+                <label>预期输出文件:</label>
+                <input type="file" id="outputFile" accept=".txt">
+            </div>
             <button onclick="uploadFiles()">上传文件</button>
             <div id="uploadResult"></div>
         </div>
@@ -88,19 +101,25 @@
     <script>
         let currentCodeId = null;
 
-        // 文件上传处理
         async function uploadFiles() {
-            const codeFile = document.getElementById('codeFile').files[0];
-            const outputFile = document.getElementById('outputFile').files[0];
-            
-            if (!codeFile || !outputFile) {
-                alert("请同时选择代码文件和预期输出文件");
+            const codeInput = document.getElementById('codeFile');
+            const inputInput = document.getElementById('inputFile'); // 输入文件
+            const outputInput = document.getElementById('outputFile');
+
+            // 确保文件选择正确
+            if (!codeInput.files[0] || !outputInput.files[0]) {
+                alert('请选择代码文件和预期输出文件');
                 return;
             }
 
             const formData = new FormData();
-            formData.append('code', codeFile);
-            formData.append('expectedOutput', outputFile);
+            formData.append('code', codeInput.files[0]);
+            formData.append('expectedOutput', outputInput.files[0]);
+
+            // 添加输入文件（如果存在）
+            if (inputInput.files[0]) {
+                formData.append('inputFile', inputInput.files[0]); // 关键修复
+            }
 
             try {
                 const response = await fetch('http://localhost:3000/upload', {
@@ -109,17 +128,24 @@
                 });
 
                 const data = await response.json();
-                if (response.ok) {
-                    currentCodeId = data.codeId;
-                    document.getElementById('verifyBtn').disabled = false;
-                    document.getElementById('uploadResult').innerHTML = `
-                        <p>✅ 文件上传成功！</p>
-                        <p>代码ID: ${data.codeId}</p>
-                        <p>输出ID: ${data.outputId}</p>
-                    `;
-                } else {
-                    throw new Error(data.error || '上传失败');
+                console.log('上传响应:', data);
+
+                // 存储文件ID
+                currentCodeId = data.codeId;
+                document.getElementById('verifyBtn').disabled = false;
+
+                // 显示上传结果
+                let inputInfo = '';
+                if (data.inputId) {
+                    inputInfo = `<p>输入文件ID: ${data.inputId}</p>`;
                 }
+
+                document.getElementById('uploadResult').innerHTML = `
+        <p>✅ 文件上传成功！</p>
+        <p>代码ID: ${data.codeId}</p>
+        <p>输出ID: ${data.outputId}</p>
+        ${inputInfo}
+      `;
             } catch (error) {
                 document.getElementById('uploadResult').innerHTML = `
                     <div class="error">❌ 错误: ${error.message}</div>
@@ -142,7 +168,7 @@
                 const data = await response.json();
                 const resultDiv = document.getElementById('verificationResult');
                 resultDiv.className = 'result';
-                
+
                 if (response.ok) {
                     resultDiv.innerHTML = `
                         <h3>验证结果：${data.match ? '✅ 匹配成功' : '❌ 匹配失败'}</h3>
@@ -165,4 +191,5 @@
         }
     </script>
 </body>
+
 </html>
