@@ -40,3 +40,23 @@ text-align: center;
 .mt-1 { margin-top: 8px; }
 .mb-1 { margin-bottom: 8px; }
 //... 更多工具类
+.el-message-box {
+  // 使用 Element Plus 的 CSS 变量来设置背景色。
+  // --el-bg-color-overlay 通常用于弹层组件的背景，浅色模式下默认为白色。
+  background-color: var(--el-bg-color-overlay, #ffffff) !important;
+
+  // 确保主要的文字颜色也是可读的
+  // --el-text-color-primary 用于主要文字，如标题
+  color: var(--el-text-color-primary, #303133) !important;
+}
+
+.el-message-box__header {
+  // 如果标题颜色也受影响
+  color: var(--el-text-color-primary, #303133) !important;
+}
+
+.el-message-box__content {
+  // --el-text-color-regular 用于常规内容文字
+  // 内容区域背景通常是继承自 .el-message-box，所以主要确保文字颜色
+  color: var(--el-text-color-regular, #606266) !important;
+}
