@@ -37,6 +37,7 @@ export interface TestCaseResult {
 export interface SubmissionResult {
   submissionId: string;        // 提交的唯一ID
   problemId: string | number;  // 对应的题目ID
+  problemTitle?: string;       // 题目名称
   userId?: string;             // 用户ID (可选)
   status: SubmissionStatus;      // 最终的评测状态
   message?: string;            // 总体信息，例如编译错误信息

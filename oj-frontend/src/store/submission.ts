@@ -1,16 +1,30 @@
 // src/store/submission.ts
 import { defineStore } from 'pinia';
 import type { SubmissionResult, SubmissionStatus, SubmitCodePayload } from '@/types/submission';
-// 假设你有一个 apiClient 用于发送请求，并且 API 服务函数定义在 @/api/submission.ts
-import { submitCodeToApi, getSubmissionResultFromApi } from '@/api/submission'; // <--- 你需要创建这个文件和这些函数
+// 确保从你的通用类型文件导入 PaginationInfo
+import type { PaginationInfo } from '@/types/index'; // 或者你实际存放 PaginationInfo 的路径
+
+// 假设 API 服务函数定义在 @/api/submission.ts
+import {
+  submitCodeToApi,
+  getSubmissionResultFromApi,
+  getSubmissionHistoryFromApiMock, // 用于获取提交历史的模拟 API 函数
+  getSubmissionDetailFromApiMock,   // 用于获取提交详情的模拟 API 函数
+} from '@/api/submission';
 
 interface SubmissionStoreState {
   isSubmitting: boolean;                      // 是否正在提交代码 (用于按钮 loading)
   isPollingResult: boolean;                   // 是否正在轮询结果 (如果需要轮询)
-  currentSubmissionId: string | null;         // 当前提交的ID
-  currentSubmissionResult: SubmissionResult | null; // 当前的提交结果
-  submissionHistory: SubmissionResult[];      // (可选) 用户的提交历史
-  error: string | null;                       // 提交或获取结果时的错误信息
+  currentSubmissionId: string | null;         // 当前提交的ID (主要用于ProblemDetailView的轮询)
+  currentSubmissionResult: SubmissionResult | null; // 当前的提交结果 (主要用于ProblemDetailView的轮询结果显示)
+  error: string | null;                       // 通用错误信息
+
+  // --- 状态用于 SubmissionListView ---
+  submissionHistory: SubmissionResult[];      // 用户的提交历史列表
+  isLoadingHistory: boolean;                  // 提交历史列表的加载状态
+  pagination: PaginationInfo | null;          // 提交历史列表的分页信息
+  currentSubmissionDetail: SubmissionResult | null; // 用于 SubmissionListView 的详情弹窗显示的提交数据
+  isLoadingDetail: boolean;                   // 单个提交详情的加载状态
 }
 
 export const useSubmissionStore = defineStore('submission', {
@@ -19,8 +33,13 @@ export const useSubmissionStore = defineStore('submission', {
     isPollingResult: false,
     currentSubmissionId: null,
     currentSubmissionResult: null,
-    submissionHistory: [],
     error: null,
+
+    submissionHistory: [],
+    isLoadingHistory: false,
+    pagination: null, // 初始化为 null，在获取到数据后再填充
+    currentSubmissionDetail: null,
+    isLoadingDetail: false,
   }),
 
   actions: {
@@ -34,28 +53,22 @@ export const useSubmissionStore = defineStore('submission', {
       this.currentSubmissionId = null;
 
       try {
-        // const response = await apiClient.post('/submissions', payload); // 直接使用 apiClient 示例
-        // 或者调用封装的 API 服务函数
-        const initialResponse = await submitCodeToApi(payload); // 假设这个函数返回类似 { submissionId: string, initialStatus: SubmissionStatus } 的结构
-
+        const initialResponse = await submitCodeToApi(payload);
         this.currentSubmissionId = initialResponse.submissionId;
-        // 初始状态可能是 Pending 或 Judging
         this.currentSubmissionResult = {
           submissionId: initialResponse.submissionId,
           problemId: payload.problemId,
-          status: initialResponse.initialStatus || 'Pending', // 使用后端返回的初始状态或默认为 Pending
+          // 尝试从 initialResponse 获取 problemTitle，如果API层返回了的话
+          problemTitle: (initialResponse as any).problemTitle || `题目 ${payload.problemId}`, // 假设 API 层可能返回
+          status: initialResponse.initialStatus || 'Pending',
           code: payload.code,
           language: payload.language,
+          createdAt: new Date().toISOString(), // 初始提交时间
         };
 
-        // 如果后端不是立即返回最终结果，你可能需要开始轮询结果
         if (this.currentSubmissionResult.status === 'Pending' || this.currentSubmissionResult.status === 'Judging') {
           this.pollSubmissionResult(initialResponse.submissionId);
-        } else {
-          // 如果后端直接返回了最终结果 (不太常见，但可能用于非常快的判题)
-          // 可以在这里直接更新 currentSubmissionResult 的完整信息 (如果 initialResponse 包含的话)
         }
-
       } catch (err: any) {
         this.error = err.response?.data?.message || err.message || '代码提交失败';
         console.error('Failed to submit code:', err);
@@ -65,48 +78,71 @@ export const useSubmissionStore = defineStore('submission', {
     },
 
     /**
-     * (可选) 轮询获取提交结果
-     * @param submissionId 提交ID
+     * 轮询获取当前提交的评测结果 (主要用于 ProblemDetailView)
      */
     async pollSubmissionResult(submissionId: string) {
-      if (!submissionId) return;
+      // 确保只轮询当前正在处理的提交
+      if (!submissionId || this.currentSubmissionId !== submissionId || this.isPollingResult) {
+        if(this.currentSubmissionId !== submissionId && this.isPollingResult){
+            console.log(`[Store] Stopping poll for old submission ${this.currentSubmissionId} as new one ${submissionId} is active or polling is already active.`);
+            // 这里可能需要更复杂的逻辑来取消旧的 setTimeout (如果 poll 是在类外部的 setTimeout)
+            // 简单起见，依赖 this.currentSubmissionId !== submissionId 来让旧的 poll 实例在下一次检查时停止
+        }
+        // return; // 如果正在轮询另一个，或者没有ID，或者不是当前ID，则不启动新的（或根据逻辑调整）
+      }
+      
+      // 确保只有在状态是 Pending 或 Judging 时才继续轮询该 submissionId
+      if (!this.currentSubmissionResult || (this.currentSubmissionResult.status !== 'Pending' && this.currentSubmissionResult.status !== 'Judging')) {
+        this.isPollingResult = false; // 状态已最终化，停止轮询
+        return;
+      }
+
       this.isPollingResult = true;
       console.log(`[Store] Polling for submission ID: ${submissionId}`);
 
       try {
-        // 这是一个简化的轮询示例，实际项目中可能需要更复杂的逻辑
-        // (例如：最大尝试次数、指数退避、WebSocket 等)
         let attempts = 0;
-        const maxAttempts = 20; // 最多轮询20次 (例如，20 * 3秒 = 1分钟)
-        const interval = 3000; // 每3秒轮询一次
+        const maxAttempts = 20;
+        const interval = 3000;
 
         const poll = async (): Promise<void> => {
+          // 再次检查，确保轮询的是当前关注的提交，并且仍在轮询状态
+          if (!this.isPollingResult || this.currentSubmissionId !== submissionId) {
+            console.log(`[Store] Polling for ${submissionId} aborted or different submission active.`);
+            this.isPollingResult = false; // 确保状态重置
+            return;
+          }
+
           if (attempts >= maxAttempts) {
             this.error = '获取评测结果超时。';
-            this.isPollingResult = false;
-            if (this.currentSubmissionResult) { // 如果长时间pending，可以设一个超时状态
-                this.currentSubmissionResult.status = 'System Error'; // 或者自定义一个 "Polling Timeout" 状态
-                this.currentSubmissionResult.message = this.error;
+            if (this.currentSubmissionResult && this.currentSubmissionResult.submissionId === submissionId) {
+              this.currentSubmissionResult.status = 'System Error';
+              this.currentSubmissionResult.message = this.error;
             }
+            this.isPollingResult = false;
             console.warn(`Polling timed out for submission ID: ${submissionId}`);
             return;
           }
 
           attempts++;
-          const resultData = await getSubmissionResultFromApi(submissionId); // 假设这个API函数获取结果
+          const resultData = await getSubmissionResultFromApi(submissionId); // 这个 API 获取的是单个提交的最新状态
 
-          this.currentSubmissionResult = resultData;
-
-          if (resultData.status !== 'Pending' && resultData.status !== 'Judging') {
-            // 评测完成
-            this.isPollingResult = false;
-            console.log(`[Store] Polling complete for submission ID: ${submissionId}`, resultData);
+          // 只更新与当前轮询ID匹配的结果
+          if (this.currentSubmissionId === submissionId) {
+            this.currentSubmissionResult = resultData;
+            if (resultData.status !== 'Pending' && resultData.status !== 'Judging') {
+              this.isPollingResult = false;
+              console.log(`[Store] Polling complete for submission ID: ${submissionId}`, resultData);
+            } else {
+              setTimeout(poll, interval); // 继续轮询
+            }
           } else {
-            // 继续轮询
-            setTimeout(poll, interval);
+            // 如果 currentSubmissionId 在轮询期间改变了（例如用户提交了新的代码），停止这个旧的轮询
+            this.isPollingResult = false;
+             console.log(`[Store] currentSubmissionId changed during poll for ${submissionId}. Stopping this poll.`);
           }
         };
-        setTimeout(poll, interval); // 首次轮询延迟一点启动
+        setTimeout(poll, interval);
       } catch (err: any) {
         this.error = err.response?.data?.message || err.message || '获取提交结果失败';
         this.isPollingResult = false;
@@ -115,17 +151,83 @@ export const useSubmissionStore = defineStore('submission', {
     },
 
     /**
-     * 清除当前的提交结果 (例如，在进入新的题目详情页时调用)
+     * 清除 ProblemDetailView 使用的当前提交结果和ID
      */
     clearCurrentSubmissionResult() {
       this.currentSubmissionResult = null;
       this.currentSubmissionId = null;
-      this.error = null;
-      this.isPollingResult = false; // 也停止轮询状态
-      // 你可能还想取消正在进行的轮询，但这需要更复杂的 setTimeout/setInterval 管理
+      this.isPollingResult = false; // 关键：停止任何正在进行的轮询
+      // this.error = null; // 可选：是否清除错误信息
     },
 
-    // (可选) 获取用户提交历史的 action
-    // async fetchSubmissionHistory(params = {}) { ... }
+    // --- 新增用于 SubmissionListView 的 Actions ---
+    /**
+     * 获取提交历史列表
+     */
+    async fetchSubmissionHistory(params: {
+      page?: number;
+      limit?: number;
+      problemId?: string;
+      status?: SubmissionStatus;
+      // userId?: string; // 如果需要，从 API 参数中获取
+    } = {}) {
+      this.isLoadingHistory = true;
+      this.error = null; // 清除之前的列表错误
+      try {
+        // 真实场景中，这里会根据 USE_MOCK (如果全局设置) 或直接调用真实 API 函数
+        // const apiFunc = USE_MOCK_SUBMISSION_HISTORY ? getSubmissionHistoryFromApiMock : getSubmissionHistoryFromApi;
+        // 为简单起见，我们直接调用模拟函数，因为之前 API 层已经有了模拟数据
+        const response = await getSubmissionHistoryFromApiMock(params);
+
+        this.submissionHistory = response.items;
+        this.pagination = response.pagination;
+      } catch (err: any) {
+        this.error = err.message || '获取提交历史失败';
+        this.submissionHistory = [];
+        this.pagination = null; // 出错时重置分页
+        console.error('Failed to fetch submission history:', err);
+      } finally {
+        this.isLoadingHistory = false;
+      }
+    },
+
+    /**
+     * 获取单个提交的详细信息 (用于 SubmissionListView 的详情弹窗)
+     */
+    async fetchSubmissionById(submissionId: string) {
+      this.isLoadingDetail = true;
+      this.error = null; // 清除之前的详情错误
+      this.currentSubmissionDetail = null;
+      try {
+        // const apiFunc = USE_MOCK_SUBMISSION_DETAIL ? getSubmissionDetailFromApiMock : getSubmissionDetailFromApi;
+        const responseData = await getSubmissionDetailFromApiMock(submissionId); // 使用模拟函数
+        this.currentSubmissionDetail = responseData;
+      } catch (err: any) {
+        this.error = err.message || `获取提交详情 (ID: ${submissionId}) 失败`;
+        console.error(`Failed to fetch submission detail ${submissionId}:`, err);
+      } finally {
+        this.isLoadingDetail = false;
+      }
+    },
+
+    /**
+     * 清除 SubmissionListView 弹窗中显示的当前提交详情
+     */
+    clearCurrentSubmissionDetail() {
+      this.currentSubmissionDetail = null;
+      this.isLoadingDetail = false; // 重置加载状态
+      // this.error = null; // 可选
+    },
+
+    /**
+     * (可选) 清空提交历史列表的状态，例如在组件卸载或重新进入页面时
+     */
+    clearSubmissionHistory() {
+        this.submissionHistory = [];
+        this.pagination = null;
+        this.isLoadingHistory = false;
+        this.error = null; // 通常也清除错误
+    }
+    // --- 结束新增 Actions ---
   },
 });
