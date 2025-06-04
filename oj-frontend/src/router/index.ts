@@ -2,6 +2,8 @@ import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
 import HomeView from '@/views/HomeView.vue'; // 示例：首页组件
 import ProblemListView from '@/views/problem/ProblemListView.vue';
 import ProblemDetailView from '@/views/problem/ProblemDetailView.vue';
+import SubmissionListView from '@/views/submission/SubmissionListView.vue';
+import ProblemUploadView from '@/views/problem/ProblemUploadView.vue';
 const routes: Array<RouteRecordRaw> = [
   {
     path: '/',
@@ -13,6 +15,18 @@ const routes: Array<RouteRecordRaw> = [
     path: '/problem', // 对应 <el-menu-item index="/problem">
     name: 'ProblemList',
     component: ProblemListView, 
+  },
+
+   {
+    path: '/upload', // 对应 <el-menu-item index="/problem">
+    name: 'ProblemUpload',
+    component: ProblemUploadView, 
+  },
+
+ {
+    path: '/submission', // 
+    name: 'SubmissionList',
+    component: SubmissionListView, 
   },
 
   {

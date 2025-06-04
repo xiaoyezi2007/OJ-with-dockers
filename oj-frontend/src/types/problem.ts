@@ -6,6 +6,15 @@
 export type ProblemDifficulty =   'Easy' | 'Medium' | 'Hard';
 
 /**
+ * 题目示例的类型
+ */
+export interface ProblemExample {
+  input: string;
+  output: string;
+  explanation?: string;
+}
+
+/**
  * 单个题目的数据结构接口
  */
 export interface Problem {
@@ -18,20 +27,9 @@ export interface Problem {
   timeLimit?: number;      // 时间限制 (ms) (题目详情页会用到)
   memoryLimit?: number;    // 内存限制 (MB) (题目详情页会用到)
   // 根据实际后端 API 可能还有其他字段，如创建时间、出题人等
-   examples?: Array<{ input: string; output: string; explanation?: string }>; // 输入输出示例
+  inputFormat?: string;         // 输入格式描述 (Markdown)
+  outputFormat?: string;        // 输出格式描述 (Markdown)
+   examples?: ProblemExample[];// 输入输出示例
    constraints?: string[]; // 约束条件
 }
 
-/**
- * 获取题目列表 API 的查询参数接口 (用于 fetchProblems action)
- */
-export interface FetchProblemsParams {
-  page?: number;
-  limit?: number;
-  keyword?: string;
-  difficulty?: ProblemDifficulty; // 允许空字符串表示不筛选难度(直接在字段里添加了)
-  tags?: string[]; // 按标签筛选
-  // 其他可能的筛选或排序参数
-  // sortBy?: string;
-  // sortOrder?: 'asc' | 'desc';
-}

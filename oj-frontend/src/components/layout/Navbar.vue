@@ -13,7 +13,8 @@ router
 >
 <el-menu-item index="/">首页</el-menu-item>
 <el-menu-item index="/problem">题目列表</el-menu-item>
-<el-menu-item index="/submissions">提交记录</el-menu-item>
+<el-menu-item index="/submission">提交记录</el-menu-item>
+<el-menu-item index="/upload">上传题目</el-menu-item>
 </el-menu>
 </div>
 </template>

@@ -9,6 +9,19 @@ const MOCK_PROBLEMS_DB: Problem[] = [
   { id: 'P1001', title: 'A+B Problem', difficulty: 'Easy', acceptanceRate: 0.65, tags: ['入门', '简单数学'], description: "Calculate a + b.", timeLimit: 1000, memoryLimit: 256, examples: [{input: "1 2", output: "3"}]},
   { id: 'P1002', title: '两数之和', difficulty: 'Easy', acceptanceRate: 0.55, tags: ['数组', '哈希表'], description: "Find two numbers that sum to a target.", timeLimit: 1000, memoryLimit: 256, examples: [{input: "[2,7,11,15], 9", output: "[0,1]"}]},
   { id: 'P1003', title: '最长公共子序列', difficulty: 'Medium', acceptanceRate: 0.40, tags: ['动态规划', '字符串'], description: "Find the longest common subsequence.", timeLimit: 2000, memoryLimit: 512, examples: [{input: "abcde, ace", output: "3"}]},
+  { id: 'P1001', title: 'A+B Problem', difficulty: 'Easy', acceptanceRate: 0.65, tags: ['入门', '简单数学'], description: "Calculate a + b.", timeLimit: 1000, memoryLimit: 256, examples: [{input: "1 2", output: "3"}]},
+  { id: 'P1002', title: '两数之和', difficulty: 'Easy', acceptanceRate: 0.55, tags: ['数组', '哈希表'], description: "Find two numbers that sum to a target.", timeLimit: 1000, memoryLimit: 256, examples: [{input: "[2,7,11,15], 9", output: "[0,1]"}]},
+  { id: 'P1003', title: '最长公共子序列', difficulty: 'Medium', acceptanceRate: 0.40, tags: ['动态规划', '字符串'], description: "Find the longest common subsequence.", timeLimit: 2000, memoryLimit: 512, examples: [{input: "abcde, ace", output: "3"}]},
+  { id: 'P1001', title: 'A+B Problem', difficulty: 'Easy', acceptanceRate: 0.65, tags: ['入门', '简单数学'], description: "Calculate a + b.", timeLimit: 1000, memoryLimit: 256, examples: [{input: "1 2", output: "3"}]},
+  { id: 'P1002', title: '两数之和', difficulty: 'Easy', acceptanceRate: 0.55, tags: ['数组', '哈希表'], description: "Find two numbers that sum to a target.", timeLimit: 1000, memoryLimit: 256, examples: [{input: "[2,7,11,15], 9", output: "[0,1]"}]},
+  { id: 'P1003', title: '最长公共子序列', difficulty: 'Medium', acceptanceRate: 0.40, tags: ['动态规划', '字符串'], description: "Find the longest common subsequence.", timeLimit: 2000, memoryLimit: 512, examples: [{input: "abcde, ace", output: "3"}]},
+  { id: 'P1001', title: 'A+B Problem', difficulty: 'Easy', acceptanceRate: 0.65, tags: ['入门', '简单数学'], description: "Calculate a + b.", timeLimit: 1000, memoryLimit: 256, examples: [{input: "1 2", output: "3"}]},
+  { id: 'P1002', title: '两数之和', difficulty: 'Easy', acceptanceRate: 0.55, tags: ['数组', '哈希表'], description: "Find two numbers that sum to a target.", timeLimit: 1000, memoryLimit: 256, examples: [{input: "[2,7,11,15], 9", output: "[0,1]"}]},
+  { id: 'P1003', title: '最长公共子序列', difficulty: 'Medium', acceptanceRate: 0.40, tags: ['动态规划', '字符串'], description: "Find the longest common subsequence.", timeLimit: 2000, memoryLimit: 512, examples: [{input: "abcde, ace", output: "3"}]},
+  { id: 'P1001', title: 'A+B Problem', difficulty: 'Easy', acceptanceRate: 0.65, tags: ['入门', '简单数学'], description: "Calculate a + b.", timeLimit: 1000, memoryLimit: 256, examples: [{input: "1 2", output: "3"}]},
+  { id: 'P1002', title: '两数之和', difficulty: 'Easy', acceptanceRate: 0.55, tags: ['数组', '哈希表'], description: "Find two numbers that sum to a target.", timeLimit: 1000, memoryLimit: 256, examples: [{input: "[2,7,11,15], 9", output: "[0,1]"}]},
+  { id: 'P1003', title: '最长公共子序列', difficulty: 'Medium', acceptanceRate: 0.40, tags: ['动态规划', '字符串'], description: "Find the longest common subsequence.", timeLimit: 2000, memoryLimit: 512, examples: [{input: "abcde, ace", output: "3"}]},
+  
   // ... 你可以添加更多模拟题目数据
 ];
 
