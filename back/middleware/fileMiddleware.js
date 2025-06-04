@@ -1,18 +1,9 @@
 const multer = require('multer');
 const path = require('path');
 
-// 配置multer存储
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, '../storage/tmp'));
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, `${uniqueSuffix}-${file.originalname}`);
-  }
-});
+const storage = multer.memoryStorage(); // 使用内存存储，稍后直接处理buffer
 
-// 文件过滤器 - 只允许特定扩展名的文件
+// 文件过滤器
 const fileFilter = (req, file, cb) => {
   const allowedInputTypes = ['.in', '.txt'];
   const allowedOutputTypes = ['.out', '.ans', '.txt'];
@@ -29,7 +20,7 @@ const fileFilter = (req, file, cb) => {
     }
   }
   
-  cb(new Error('Invalid file type'), false);
+  cb(new Error('无效的文件类型'), false);
 };
 
 // 文件上传中间件
@@ -58,10 +49,10 @@ exports.handleProblemFiles = (req, res, next) => {
   // 执行上传
   dynamicUpload(req, res, (err) => {
     if (err) {
-      console.error('File upload error:', err);
+      console.error('文件上传失败:', err);
       return res.status(400).json({
         success: false,
-        message: 'File upload failed',
+        message: '文件上传失败',
         error: err.message
       });
     }

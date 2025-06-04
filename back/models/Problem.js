@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
 
 const testCaseSchema = new mongoose.Schema({
-  inputPath: String,    // 输入文件存储路径
-  outputPath: String,   // 输出文件存储路径
+  inputPath: String,
+  outputPath: String,
   isSample: { 
     type: Boolean, 
     default: false 
@@ -38,7 +38,7 @@ const problemSchema = new mongoose.Schema({
     required: true,
     validate: {
       validator: tags => tags.length > 0,
-      message: 'At least one tag is required'
+      message: '至少需要一个标签'
     }
   },
   inputFormat: String,
@@ -61,17 +61,13 @@ const problemSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now
-  },
-  createdBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
   }
+  // 移除了 createdBy 字段
 });
 
 // 自动生成problemId
 problemSchema.pre('save', async function(next) {
   if (!this.problemId) {
-    // 生成格式为 PROB-YYYY-XXXX 的ID
     const year = new Date().getFullYear();
     const count = await mongoose.model('Problem').countDocuments();
     this.problemId = `PROB-${year}-${(count + 1).toString().padStart(4, '0')}`;
