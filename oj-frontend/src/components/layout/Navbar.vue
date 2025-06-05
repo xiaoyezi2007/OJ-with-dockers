@@ -39,30 +39,54 @@ const activeIndex = computed(() => route.path);
 </script>
 
 <style scoped lang="scss">
-
-
 .navbar {
-display: flex;
-justify-content: space-between;
-align-items: center;
-height: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 60px; // 你可以调整导航栏高度
+  padding: 0 25px; // 为导航栏添加了水平内边距
+  background-color: #3A8EE6; // 尝试一个略有不同、可能更“沉稳”的蓝色
+  // box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); // 可选：细微的阴影增加层次感
 
-
-
- .logo-area {
-    font-size: 20px;
-    font-weight: bold;
+  .logo-area {
+    font-size: 22px; // 略微增大字号，使其更突出
+    font-weight: 600; // 更精致的粗体效果
     a {
-      color: white;
+      color: #FFFFFF; // 纯白色以保证良好对比度
       text-decoration: none;
+      transition: color 0.3s ease; // 文字颜色过渡
+      &:hover {
+        color: #E0E0E0; // 悬停时文字颜色轻微变暗作为反馈
+      }
     }
   }
- .el-menu {
-    border-bottom: none; // 去除 el-menu 默认的下边框
-  }
- .el-menu-item {
-    &:hover {
-      background-color: #66b1ff!important; // 调整 hover 背景色
+
+  .el-menu {
+    border-bottom: none; // 保留这个，移除默认下边框
+    background-color: transparent !important; // 使菜单背景透明，继承导航栏的背景色
+    height: 100%; // 确保菜单占据导航栏的全部高度，以便对齐
+
+    // 直接针对菜单项进行更精细的控制
+    .el-menu-item {
+      padding: 0 20px; // 增加水平内边距
+      font-size: 15px; // 调整字号
+      color: #FFFFFF; // 默认文字颜色
+      transition: background-color 0.25s ease-out, color 0.25s ease-out; // 更平滑的过渡效果
+
+      &:hover {
+        background-color: #509DEE !important; // 一个更亮、区分度更高的悬停蓝色
+        color: #FFFFFF !important; // 悬停时文字颜色保持白色
+      }
+
+      &.is-active { // 激活项的样式
+        background-color: #2A7ABC !important; // 使用一个更深或更有区分度的颜色作为激活背景
+        color: #FFD04B !important; // 如果你喜欢，可以保留你当前的激活文字颜色
+        // 或者，一个更低调的激活状态：
+        // border-bottom: 2px solid #FFD04B; // 底部边框高亮
+        // background-color: transparent !important; // 背景透明
+        // color: #FFD04B !important; // 仅文字颜色变化
+        font-weight: 600; // 激活项文字略微加粗
+      }
     }
   }
 }

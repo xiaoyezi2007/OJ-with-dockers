@@ -9,7 +9,7 @@ import type { GetProblemListRequestParams } from '@/types/api';
 import { getProblemList, getProblemDetail, getProblemListMock, getProblemDetailMock } from '@/api/problem'; // 导入真实和模拟的API
 
 // 控制是否使用模拟 API
-const USE_MOCK = import.meta.env.VITE_USE_MOCK_API === 'true';
+const USE_MOCK = import.meta.env.VITE_USE_MOCK_API === 'false';
 
 interface ProblemStoreState {
   problems: Problem[];

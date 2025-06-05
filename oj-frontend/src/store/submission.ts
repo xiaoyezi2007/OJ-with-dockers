@@ -9,7 +9,10 @@ import {
   submitCodeToApi,
   getSubmissionResultFromApi,
   getSubmissionHistoryFromApiMock, // 用于获取提交历史的模拟 API 函数
-  getSubmissionDetailFromApiMock,   // 用于获取提交详情的模拟 API 函数
+  getSubmissionDetailFromApiMock, 
+  getSubmissionDetailFromApi,
+  getSubmissionHistoryFromApi,
+  // 用于获取提交详情的模拟 API 函数
 } from '@/api/submission';
 
 interface SubmissionStoreState {
@@ -177,7 +180,7 @@ export const useSubmissionStore = defineStore('submission', {
         // 真实场景中，这里会根据 USE_MOCK (如果全局设置) 或直接调用真实 API 函数
         // const apiFunc = USE_MOCK_SUBMISSION_HISTORY ? getSubmissionHistoryFromApiMock : getSubmissionHistoryFromApi;
         // 为简单起见，我们直接调用模拟函数，因为之前 API 层已经有了模拟数据
-        const response = await getSubmissionHistoryFromApiMock(params);
+        const response = await getSubmissionHistoryFromApi(params);
 
         this.submissionHistory = response.items;
         this.pagination = response.pagination;
@@ -200,7 +203,7 @@ export const useSubmissionStore = defineStore('submission', {
       this.currentSubmissionDetail = null;
       try {
         // const apiFunc = USE_MOCK_SUBMISSION_DETAIL ? getSubmissionDetailFromApiMock : getSubmissionDetailFromApi;
-        const responseData = await getSubmissionDetailFromApiMock(submissionId); // 使用模拟函数
+        const responseData = await getSubmissionDetailFromApi(submissionId); // 使用模拟函数
         this.currentSubmissionDetail = responseData;
       } catch (err: any) {
         this.error = err.message || `获取提交详情 (ID: ${submissionId}) 失败`;

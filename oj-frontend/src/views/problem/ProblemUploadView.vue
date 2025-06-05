@@ -126,6 +126,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, nextTick } from 'vue';
+import { uploadNewProblem } from '@/api/addProblem';
 import type { FormInstance, FormRules } from 'element-plus';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import {
@@ -274,6 +275,19 @@ const submitProblem = async () => {
 
       isSubmitting.value = true;
       const formData = new FormData();
+       const problemDetails = {
+          id: problemForm.id, // 如果 id 为空，后端应忽略或自动生成
+          title: problemForm.title,
+          difficulty: problemForm.difficulty,
+          tags: problemForm.tags,
+          description: problemForm.description,
+          inputFormat: problemForm.inputFormat,
+          outputFormat: problemForm.outputFormat,
+          timeLimit: problemForm.timeLimit,
+          memoryLimit: problemForm.memoryLimit,
+          examples: problemForm.examples,
+          // 注意：这里不直接传递 File 对象，File 对象通过 FormData 单独附加
+      };
       formData.append('problemData', JSON.stringify({ ...problemForm }));
       testCases.forEach((tc, index) => {
         if (tc.inputFile) formData.append(`test_input_file_${index}`, tc.inputFile, tc.inputFile.name);
@@ -284,10 +298,11 @@ const submitProblem = async () => {
       for (let [key, value] of formData.entries()) { console.log(key, value); }
 
       try {
-        await new Promise(resolve => setTimeout(resolve, 1500)); // 模拟API
+         const response = await uploadNewProblem(formData);
+        //await new Promise(resolve => setTimeout(resolve, 1500)); // 模拟API
         isSubmitting.value = false;
         ElMessageBox.confirm(
-          `题目 "${problemForm.title}" 已成功提交！是否需要清空表单以便添加下一题？`,
+          response.message || `题目 "${problemForm.title}" 已成功提交！是否需要清空表单以便添加下一题？`,
           '提交成功',
           {
             confirmButtonText: '清空表单',
