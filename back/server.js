@@ -23,21 +23,6 @@ app.use(express.json());
 // 或者如果你的路由本身就定义了完整的路径 (如 /upload), 则直接使用
 app.use('/', fileRoutes); // 这样路由中定义的 /upload 就是根路径下的 /upload
 
-// 确保存储目录存在
-const storageDir = path.join(__dirname, 'storage');
-const testcasesDir = path.join(storageDir, 'testcases');
-const tmpDir = path.join(storageDir, 'tmp');
-
-const fs = require('fs').promises;
-fs.mkdir(storageDir, { recursive: true })
-  .then(() => fs.mkdir(testcasesDir, { recursive: true }))
-  .then(() => fs.mkdir(tmpDir, { recursive: true }))
-  .catch(err => console.error('Error creating storage directories:', err));
-
-// 路由
-const problemRoutes = require('./routes/problemRoutes');
-app.use('/api/problems', problemRoutes);
-
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {

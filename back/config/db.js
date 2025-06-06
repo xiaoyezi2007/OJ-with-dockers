@@ -6,7 +6,7 @@ dotenv.config(); // 加载 .env 文件中的环境变量
 async function connectDB() {
   try {
     mongoose.set('strictQuery', false);
-    await mongoose.connect("mongodb://localhost:27017/code_runner", {
+    await mongoose.connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true
     });
