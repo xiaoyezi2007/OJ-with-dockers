@@ -6,13 +6,67 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import dotenv from 'dotenv';
 
-import File from '../models/File.js';
+import File from '../models/File.js'; // 确保 File 模型已导入
 import upload from '../middleware/multerConfig.js';
 import normalizeOutput from '../utils/normalizeOutput.js';
 
 dotenv.config();
 const execAsync = promisify(exec);
 const router = express.Router();
+
+// ==================== 新增/修改的代码开始 ====================
+
+// 路由: GET /api/files (获取列表)
+router.get('/', async (req, res) => {
+  try {
+    // 1. 从请求的查询参数中获取 page 和 limit，并设置默认值
+    const page = parseInt(String(req.query.page)) || 1;
+    const limit = parseInt(String(req.query.limit)) || 10;
+    const skip = (page - 1) * limit; // 计算需要跳过的条目数
+
+    // 2. 创建一个查询对象，以便未来可以添加筛选功能
+    const query = {}; // 例如可以添加 req.query.keyword 等
+
+    // 3. 分别查询总条目数和当前页的数据
+    const totalItems = await File.countDocuments(query);
+    const files = await File.find(query)
+      .sort({ _id: -1 }) // 按创建时间倒序排列
+      .skip(skip)
+      .limit(limit);
+
+    // 4. 以标准格式返回数据和分页信息
+    res.json({
+      items: files,
+      pagination: {
+        currentPage: page,
+        pageSize: limit,
+        totalItems: totalItems,
+        totalPages: Math.ceil(totalItems / limit)
+      }
+    });
+
+  } catch (err) {
+    console.error("Get all files error:", err);
+    res.status(500).json({ error: 'Server error while fetching files.' });
+  }
+});
+
+// 路由: GET /api/files/:id
+// 功能: 获取单个文件的详情（为前端的“题目详情”提供数据）
+router.get('/:id', async (req, res) => {
+  try {
+    const file = await File.findById(req.params.id);
+    if (!file) {
+      return res.status(404).json({ message: 'File not found' });
+    }
+    res.json(file);
+  } catch (err) {
+    console.error(`Get file by id error:`, err);
+    res.status(500).json({ error: 'Server error while fetching file.' });
+  }
+});
+
+// ==================== 新增/修改的代码结束 ====================
 
 // 路由：上传代码文件及其正确输出
 router.post('/upload', upload.fields([
@@ -21,7 +75,7 @@ router.post('/upload', upload.fields([
   { name: 'inputFile', maxCount: 1 }
 ]), async (req, res) => {
   try {
-    let inputFileDoc = null; // 使用 inputFileDoc 避免与 Schema 字段名混淆
+    let inputFileDoc = null; 
     if (req.files.inputFile && req.files.inputFile[0]) {
       inputFileDoc = new File({
         filename: req.files.inputFile[0].originalname,

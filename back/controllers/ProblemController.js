@@ -1,70 +1,51 @@
 const Problem = require('../models/Problem');
 const fs = require('fs').promises;
 const path = require('path');
+const File = require('../models/File'); // 'File' 模型即为我们的 Problem 模型
 
 exports.createProblem = async (req, res) => {
   try {
-    // 解析表单数据
-    const problemData = JSON.parse(req.body.problemData);
+    // 从请求体中解构出题目的元数据
+    const { title, description, difficulty, tags, timeLimit, memoryLimit } = req.body;
     
-    // 创建新题目 (无用户关联)
-    const newProblem = new Problem(problemData);
+    // 从 req.files 中获取上传的测试用例
+    const testCases = req.files.testCases;
 
-    // 处理测试点文件
-    if (req.files && req.files.length > 0) {
-      const testCases = [];
-      
-      // 创建题目专属目录
-      const problemDir = path.join(__dirname, '../../storage/testcases', newProblem.problemId);
-      await fs.mkdir(problemDir, { recursive: true });
-      
-      // 处理每个测试点
-      for (let i = 0; i < problemData.examples.length; i++) {
-        const inputFile = req.files.find(f => 
-          f.fieldname === `test_input_file_${i}`
-        );
-        
-        const outputFile = req.files.find(f => 
-          f.fieldname === `test_output_file_${i}`
-        );
-        
-        if (inputFile && outputFile) {
-          const inputFilename = `input_${i}.in`;
-          const outputFilename = `output_${i}.out`;
-          
-          const inputPath = path.join(problemDir, inputFilename);
-          const outputPath = path.join(problemDir, outputFilename);
-          
-          await fs.writeFile(inputPath, inputFile.buffer);
-          await fs.writeFile(outputPath, outputFile.buffer);
-          
-          testCases.push({
-            inputPath: inputPath.replace(/\\/g, '/'),
-            outputPath: outputPath.replace(/\\/g, '/'),
-            isSample: true
-          });
-        }
-      }
-      
-      newProblem.testCases = testCases;
+    // 校验测试用例是否存在
+    if (!testCases || testCases.length === 0) {
+      return res.status(400).json({ message: 'Test case files are required.' });
     }
 
-    // 保存到数据库
-    const savedProblem = await newProblem.save();
-    
+    // 创建一个新的题目实例
+    const newProblem = new File({
+      title,
+      description,
+      difficulty,
+      tags: JSON.parse(tags), // 前端发送的 tags 是字符串化的数组，后端需要解析
+      timeLimit,
+      memoryLimit,
+      testCases: testCases.map(file => ({
+        input: file.path, // 保存输入文件的路径
+        output: ''       // 输出暂时留空
+      }))
+    });
+
+    // 将新题目保存到数据库
+    await newProblem.save();
+
+    // 返回成功响应
     res.status(201).json({
-      success: true,
-      message: '题目创建成功',
-      problemId: savedProblem.problemId
+      message: 'Problem created successfully!',
+      file: newProblem
     });
-  } catch (error) {
-    console.error('创建题目失败:', error);
-    
-    res.status(500).json({ 
-      success: false, 
-      message: '创建题目失败',
-      error: error.message 
-    });
+
+  } catch (err) {
+    console.error('Error creating problem:', err);
+    if (err.name === 'ValidationError') {
+        return res.status(400).json({ message: 'Validation Error', errors: err.errors });
+    }
+    // 返回统一的服务器错误
+    res.status(500).send('Server Error');
   }
 };
 

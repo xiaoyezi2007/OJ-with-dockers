@@ -5,8 +5,16 @@ import type { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, Inte
 // import NProgress from 'nprogress';
 // import 'nprogress/nprogress.css';
 
+const request = axios.create({
+  // 修正：将 baseURL 设置为代理关键字 /api
+  // 这样所有请求如 request.post('/files/upload') 都会被自动构造成 /api/files/upload
+  // 然后被 Vite 代理正确转发到 http://localhost:5000/api/files/upload
+  baseURL: '/api', 
+  timeout: 5000,
+})
+
 const apiClient: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api/v1', // 确保 API 前缀正确
+  baseURL: 'http://localhost:5000/api', // <-- 修改这里
   timeout: 10000, // 请求超时
 });
 
@@ -29,26 +37,18 @@ apiClient.interceptors.request.use(
 // 响应拦截器
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
-    // NProgress?.done();
-    // 通常后端会在一个固定的字段（如 data 或 result）中返回实际数据
-    // 例如，如果后端返回 { code: 0, message: 'success', data: { ... } }
-    // if (response.data && response.data.code === 0) {
-    //   return response.data.data; // 直接返回核心数据
-    // } else {
-    //   // 处理业务错误，例如弹窗提示
-    //   // ElMessage.error(response.data.message || 'Error');
-    //   return Promise.reject(new Error(response.data.message || 'Error'));
-    // }
-    return response; // 或者直接返回整个 response，在 API 服务函数中处理
+    // 检查响应中是否有 data 属性，如果有，直接返回 data
+    // 这样所有 API 调用在 .then() 或 await 之后拿到的都是后端返回的纯数据
+    if (response && response.data) {
+      return response.data;
+    }
+    // 如果没有 data，返回整个响应以防万一
+    return response;
   },
-  (error) => {
-    // NProgress?.done();
-    // if (error.response) {
-    //   // 根据状态码处理错误，例如 401 跳转登录页
-    //   // ElMessage.error(error.response.data.message || `Error: ${error.response.status}`);
-    // } else {
-    //   // ElMessage.error('Network Error');
-    // }
+  (error: AxiosError) => {
+    // 统一处理错误信息
+    const message = (error.response?.data as any)?.message || error.message || '未知网络错误';
+    message.error(message);
     return Promise.reject(error);
   }
 );

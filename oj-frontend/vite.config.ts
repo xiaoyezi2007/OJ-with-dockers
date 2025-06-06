@@ -30,6 +30,16 @@ export default defineConfig({
       dts: 'src/components.d.ts',
     }),
   ],
+  server: {
+    proxy: {
+      // 当请求路径以 /api 开头时，触发此代理
+      '/api': {
+        target: 'http://localhost:5000', // 修正：指向正确的后端端口 5000
+        changeOrigin: true, // 必须设置为 true
+        // 移除 rewrite 规则，保持路径不变
+      },
+    },
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

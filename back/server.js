@@ -18,10 +18,7 @@ app.use(cors());
 app.use(express.json());
 
 // 路由
-// 你可以将所有API路由放在一个共同的前缀下，例如 /api
-// app.use('/api/files', fileRoutes);
-// 或者如果你的路由本身就定义了完整的路径 (如 /upload), 则直接使用
-app.use('/', fileRoutes); // 这样路由中定义的 /upload 就是根路径下的 /upload
+app.use('/api/files', fileRoutes);
 
 const PORT = process.env.PORT || 3000;
 
