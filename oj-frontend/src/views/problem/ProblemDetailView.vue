@@ -75,8 +75,8 @@
             <h4>提交结果:</h4>
             <p>状态: <el-tag :type="getResultTagType(submissionStore.currentSubmissionResult.status)">{{ submissionStore.currentSubmissionResult.status }}</el-tag></p>
             <p v-if="submissionStore.currentSubmissionResult.message">信息: {{ submissionStore.currentSubmissionResult.message }}</p>
-            <p v-if="submissionStore.currentSubmissionResult.time !== undefined">耗时: {{ submissionStore.currentSubmissionResult.time }} ms</p>
-            <p v-if="submissionStore.currentSubmissionResult.memory !== undefined">内存: {{ submissionStore.currentSubmissionResult.memory }} KB</p>
+            <p v-if="submissionStore.currentSubmissionResult.executionTime !== undefined">耗时: {{ submissionStore.currentSubmissionResult.executionTime }} ms</p>
+            <p v-if="submissionStore.currentSubmissionResult.memoryUsage !== undefined">内存: {{ submissionStore.currentSubmissionResult.memoryUsage }} KB</p>
           </div>
         </el-card>
       </el-col>
