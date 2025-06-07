@@ -1,48 +1,41 @@
 import mongoose from 'mongoose';
 
-// 定义测试用例的 Schema
-const TestCaseSchema = new mongoose.Schema({
-  input: {
-    type: String,
-    required: true
-  },
-  output: {
-    type: String,
-    // 在本阶段，输出可以为空字符串，之后再生成
-    required: true
-  }
-});
-
-// 定义题目的 Schema
 const FileSchema = new mongoose.Schema({
-  title: {
-    type: String,
-    required: [true, 'Title is required.']
+  // 保留的原有字段
+  filename: { type: String, required: true },
+  contentType: { type: String, required: true },
+  size: { type: Number, required: true },
+  
+  // 修正和新增的字段
+  type: { 
+    type: String, 
+    required: true, 
+    enum: ['code', 'input', 'output', 'submission'] // 增加 'submission' 类型
   },
-  description: {
-    type: String,
-    required: [true, 'Description is required.']
+  
+  // 新增：用于存储提交记录的元数据
+  problemId: { type: mongoose.Schema.Types.ObjectId, ref: 'Problem' }, // 关联到 Problem 模型
+  language: { type: String },
+  status: { 
+    type: String, 
+    default: 'Pending' // 默认状态为等待评测
   },
-  difficulty: {
-    type: String,
-    enum: ['easy', 'medium', 'hard'],
-    required: [true, 'Difficulty is required.']
-  },
-  tags: {
-    type: [String],
-    required: true
-  },
-  timeLimit: {
-    type: Number,
-    required: [true, 'Time limit is required.']
-  },
-  memoryLimit: {
-    type: Number,
-    required: [true, 'Memory limit is required.']
-  },
-  testCases: [TestCaseSchema]
+  
+  // 新增：存储代码文件的物理路径，而不是文件内容本身
+  filePath: { type: String, required: true },
+
+  // 保留的关联字段
+  reference: { type: mongoose.Schema.Types.ObjectId, ref: 'File' },
+  inputFile: { type: mongoose.Schema.Types.ObjectId, ref: 'File' },
+
+  // 新增：上传时间
+  uploadedAt: {
+    type: Date,
+    default: Date.now
+  }
+  
+  // 我们不再需要 `data` 字段，因为它会被 `filePath` 替代
+  // data: Buffer 
 });
 
-const File = mongoose.model('File', FileSchema);
-
-export default File;
+export default mongoose.model('File', FileSchema);

@@ -68,56 +68,43 @@ router.get('/:id', async (req, res) => {
 
 // ==================== 新增/修改的代码结束 ====================
 
-// 路由：上传代码文件及其正确输出
-router.post('/upload', upload.fields([
-  { name: 'code', maxCount: 1 },
-  { name: 'expectedOutput', maxCount: 1 },
-  { name: 'inputFile', maxCount: 1 }
-]), async (req, res) => {
+// --- 路由: POST /api/files/upload (处理代码提交) ---
+// 使用 upload.single('code') 来处理名为 'code' 的单个文件上传
+router.post('/upload', upload.single('code'), async (req, res) => {
   try {
-    let inputFileDoc = null; 
-    if (req.files.inputFile && req.files.inputFile[0]) {
-      inputFileDoc = new File({
-        filename: req.files.inputFile[0].originalname,
-        contentType: req.files.inputFile[0].mimetype,
-        size: req.files.inputFile[0].size,
-        type: 'input',
-        data: req.files.inputFile[0].buffer
-      });
-      await inputFileDoc.save();
-      console.log(`输入文件保存成功，ID: ${inputFileDoc._id}`);
-    } else {
-      console.log('未接收到输入文件');
+    // 1. 验证文件是否已上传
+    if (!req.file) {
+      return res.status(400).json({ message: '代码文件未上传' });
     }
-    
-    const outputFile = new File({
-      filename: req.files.expectedOutput[0].originalname,
-      contentType: req.files.expectedOutput[0].mimetype,
-      size: req.files.expectedOutput[0].size,
-      type: 'output',
-      data: req.files.expectedOutput[0].buffer
-    });
-    await outputFile.save();
 
-    const codeFile = new File({
-      filename: req.files.code[0].originalname,
-      contentType: req.files.code[0].mimetype,
-      size: req.files.code[0].size,
-      type: 'code',
-      reference: outputFile._id,
-      inputFile: inputFileDoc ? inputFileDoc._id : null,
-      data: req.files.code[0].buffer
-    });
-    await codeFile.save();
+    // 2. 从请求体和文件信息中获取数据
+    const { problemId, language } = req.body;
+    const { originalname, mimetype, size, path } = req.file;
 
-    res.json({
-      codeId: codeFile._id,
-      outputId: outputFile._id,
-      inputId: inputFileDoc ? inputFileDoc._id : null
+    // 3. 创建一个新的 File (提交记录) 文档
+    const newSubmission = new File({
+      filename: originalname,
+      contentType: mimetype,
+      size: size,
+      filePath: path, // 存储文件路径
+      type: 'submission', // 类型为提交
+      status: 'Pending',  // 初始状态为等待评测
+      problemId: problemId,
+      language: language
     });
+
+    // 4. 保存到数据库
+    const savedSubmission = await newSubmission.save();
+
+    // 5. 按照前端期望的格式返回响应
+    res.status(201).json({
+      submissionId: savedSubmission._id,
+      initialStatus: 'Pending'
+    });
+
   } catch (err) {
-    console.error("Upload route error:", err);
-    res.status(500).json({ error: err.message });
+    console.error("Submission upload error:", err);
+    res.status(500).json({ message: '提交失败，服务器内部错误', error: err.message });
   }
 });
 
