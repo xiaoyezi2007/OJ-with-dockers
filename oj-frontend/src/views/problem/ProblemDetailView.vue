@@ -154,7 +154,7 @@ const handleSubmitCode = async () => {
     return;
   }
   await submissionStore.submitCode({
-    problemId: problemStore.currentProblem.id,
+    problemId: problemStore.currentProblem._id,
     code: userCode.value,
     language: selectedLanguage.value,
   });
