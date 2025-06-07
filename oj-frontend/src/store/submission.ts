@@ -82,6 +82,17 @@ export const useSubmissionStore = defineStore('submission', {
         this.isSubmitting = false;
       }
     },
+
+    // ==================== 新增/确认的代码开始 ====================
+    /**
+     * 清除 ProblemDetailView 使用的当前提交结果和ID
+     */
+    clearCurrentSubmissionResult() {
+      this.currentSubmissionResult = null;
+      this.currentSubmissionId = null;
+      this.isPollingResult = false;
+    },
+    // ==================== 新增/确认的代码结束 ====================
     
     // ... (pollSubmissionResult 逻辑保持不变)
 

@@ -30,7 +30,7 @@ const routes: Array<RouteRecordRaw> = [
   },
 
   {
-    path: '/problem/:id', // 使用动态路由匹配，:id 会作为参数
+    path: '/problems/:id', // 使用动态路由匹配，:id 会作为参数
     name: 'ProblemDetail',
     component: ProblemDetailView,
     props: true // (可选但推荐) 将路由参数 :id 作为 props 传递给 ProblemDetailView 组件
