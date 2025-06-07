@@ -6,27 +6,14 @@ import type { PaginationInfo } from '@/types/index';
 
 // --- 真实 API 调用函数 ---
 
-/**
- * 获取题目列表 (真实 API)
- */
 export function getProblemList(params: GetProblemListRequestParams): Promise<GetProblemListResponseBody> {
-  // 修正：后端现在直接返回我们需要的数据结构，所以只需直接返回 Promise 即可
-  return apiClient.get('/files', { params });
+  // URL 改为 /problems，与后端新路由匹配
+  return apiClient.get('/problems', { params });
 }
 
-/**
- * 获取单个题目详情 (真实 API)
- */
 export function getProblemDetail(id: string | number): Promise<Problem> {
-  // 修正 URL: 指向我们之前在后端添加的 GET /api/files/:id 接口
-  return apiClient.get(`/files/${id}`)
-    .then(response => {
-      return response.data as Problem;
-    })
-    .catch(error => {
-      console.error(`Error fetching problem detail for ID ${id} from real API:`, error);
-      throw error;
-    });
+  // URL 改为 /problems/:id，与后端新路由匹配
+  return apiClient.get(`/problems/${id}`);
 }
 
 

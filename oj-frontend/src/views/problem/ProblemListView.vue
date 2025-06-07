@@ -30,10 +30,10 @@
       </template>
 
       <el-table :data="problemStore.problems" style="width: 100%" v-loading="problemStore.isLoading">
-        <el-table-column prop="id" label="题号" width="100" align="center" />
+        <el-table-column prop="_id" label="题号" width="100" align="center" />
         <el-table-column prop="title" label="标题" min-width="300">
           <template #default="{ row }">
-            <router-link :to="`/problem/${row.id}`" class="problem-title-link">
+            <router-link :to="`/problems/${row._id}`" class="problem-title-link">
               {{ row.title }}
             </router-link>
           </template>

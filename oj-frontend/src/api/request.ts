@@ -4,6 +4,7 @@ import type { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, Inte
 // 根据需要导入 NProgress 或其他加载提示库
 // import NProgress from 'nprogress';
 // import 'nprogress/nprogress.css';
+import { ElMessage } from 'element-plus'; 
 
 const request = axios.create({
   // 修正：将 baseURL 设置为代理关键字 /api
@@ -48,7 +49,7 @@ apiClient.interceptors.response.use(
   (error: AxiosError) => {
     // 统一处理错误信息
     const message = (error.response?.data as any)?.message || error.message || '未知网络错误';
-    message.error(message);
+    ElMessage.error(message);
     return Promise.reject(error);
   }
 );
