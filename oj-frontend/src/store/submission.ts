@@ -15,6 +15,7 @@ import {
   getSubmissionHistoryFromApi,
   getSubmissionDetailFromApi,
 } from '@/api/submission';
+import { ElMessage } from 'element-plus';
 
 interface SubmissionStoreState {
   isSubmitting: boolean;
@@ -24,7 +25,7 @@ interface SubmissionStoreState {
   error: string | null;
   submissionHistory: SubmissionListItem[];
   isLoadingHistory: boolean;
-  pagination: PaginationInfo;
+  pagination: PaginationInfo | null;
   currentSubmissionDetail: SubmissionResult | null;
   isLoadingDetail: boolean;
 }
@@ -49,25 +50,27 @@ export const useSubmissionStore = defineStore('submission', {
   }),
 
   actions: {
+    /**
+     * 提交代码
+     */
     async submitCode(payload: SubmitCodePayload) {
       this.isSubmitting = true;
       this.error = null;
-      this.currentSubmissionId = null;
       try {
         const formData = new FormData();
         formData.append('problemId', payload.problemId);
         formData.append('language', payload.language);
-        formData.append('code', new Blob([payload.code], { type: 'text/plain' }), `${payload.problemId}.c`);
+        formData.append('code', new Blob([payload.code], { type: 'text/plain' }), `${payload.problemId}.${payload.language}`);
 
-        // 修正：现在 initialResponse 的类型是 SubmitCodeResponse，可以直接使用
-        const initialResponse: SubmitCodeResponse = await submitCodeToApi(formData);
+        const initialResponse = await submitCodeToApi(formData);
 
+        // 设置初始状态，并立即显示在UI上
         this.currentSubmissionId = initialResponse.submissionId;
         this.currentSubmissionResult = {
           id: initialResponse.submissionId,
           problemId: payload.problemId,
-          problemTitle: initialResponse.problemTitle || `题目 ${payload.problemId}`,
-          status: initialResponse.initialStatus || 'Pending',
+          problemTitle: `题目 ${payload.problemId}`,
+          status: 'Pending',
           code: payload.code,
           language: payload.language,
           submittedAt: new Date().toISOString(),
@@ -75,11 +78,51 @@ export const useSubmissionStore = defineStore('submission', {
           memory: 0,
         };
         
-        // ... (pollSubmissionResult 逻辑)
+        // 标记开始轮询，并延迟一小段时间后启动第一次轮询
+        this.isPollingResult = true;
+        setTimeout(() => {
+          this.pollSubmissionResult(initialResponse.submissionId);
+        }, 1500); // 延迟1.5秒，给后端一点启动评测的时间
+
       } catch (err: any) {
-        this.error = err.response?.data?.message || err.message || '代码提交失败';
-      } finally {
+        this.error = err.message || '代码提交失败';
         this.isSubmitting = false;
+      } finally {
+        // isSubmitting 会在轮询结束后或失败时在对应函数中设置为 false
+        // 这里 submitCode 函数在触发轮询后即可认为“提交”动作完成
+        this.isSubmitting = false; 
+      }
+    },
+
+    /**
+     * 轮询获取评测结果
+     */
+    async pollSubmissionResult(submissionId: string) {
+      // 如果没有在轮询状态，或者要轮询的ID已经不是当前最新的提交ID，则停止
+      if (!this.isPollingResult || this.currentSubmissionId !== submissionId) {
+        return;
+      }
+
+      try {
+        console.log(`[Polling] Fetching result for ${submissionId}`);
+        const resultData = await getSubmissionResultFromApi(submissionId);
+        
+        // 再次检查，防止在异步请求期间，用户又提交了新的代码
+        if (this.currentSubmissionId === submissionId) {
+          this.currentSubmissionResult = resultData;
+          
+          // 如果状态还是 "Pending" 或 "Judging"，则继续轮询
+          if (resultData.status === 'Pending' || resultData.status === 'Judging') {
+            setTimeout(() => this.pollSubmissionResult(submissionId), 3000); // 3秒后再次检查
+          } else {
+            // 如果是最终状态 (Accepted, Wrong Answer 等)，则停止轮询
+            this.isPollingResult = false;
+            console.log(`[Polling] Final status received: ${resultData.status}. Polling stopped.`);
+          }
+        }
+      } catch (err: any) {
+        this.error = err.message || '获取提交结果失败';
+        this.isPollingResult = false; // 出错时也停止轮询
       }
     },
 
