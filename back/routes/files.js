@@ -107,6 +107,29 @@ router.post('/upload', upload.single('code'), async (req, res) => {
   }
 });
 
+// ==================== 新增代码开始 ====================
+// --- 路由: GET /api/files/:id (获取提交详情) ---
+router.get('/:id', async (req, res) => {
+  try {
+    // 使用 File 模型和 findById 方法来查找提交记录
+    const submission = await File.findById(req.params.id);
+    
+    // 如果没有找到提交记录，返回 404
+    if (!submission) {
+      return res.status(404).json({ message: 'Submission not found' });
+    }
+    
+    // 如果找到了，以 JSON 格式返回提交数据
+    res.json(submission);
+
+  } catch (err) {
+    // 如果 ID 格式错误或其他错误发生，捕获并返回 400 错误
+    console.error(`Get submission by id error:`, err);
+    res.status(400).json({ error: 'Invalid ID format or server error.' });
+  }
+});
+// ==================== 新增代码结束 ====================
+
 // 路由：/verify/:codeId
 router.post('/verify/:codeId', async (req, res) => {
   let tmpDir = '';
