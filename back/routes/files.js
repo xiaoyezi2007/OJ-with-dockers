@@ -9,6 +9,7 @@ import dotenv from 'dotenv';
 import File from '../models/File.js'; // 确保 File 模型已导入
 import upload from '../middleware/multerConfig.js';
 import normalizeOutput from '../utils/normalizeOutput.js';
+import { judgeSubmission } from '../services/judgingService.js'; 
 
 dotenv.config();
 const execAsync = promisify(exec);
@@ -69,38 +70,36 @@ router.get('/:id', async (req, res) => {
 // ==================== 新增/修改的代码结束 ====================
 
 // --- 路由: POST /api/files/upload (处理代码提交) ---
-// 使用 upload.single('code') 来处理名为 'code' 的单个文件上传
 router.post('/upload', upload.single('code'), async (req, res) => {
   try {
-    // 1. 验证文件是否已上传
     if (!req.file) {
       return res.status(400).json({ message: '代码文件未上传' });
     }
 
-    // 2. 从请求体和文件信息中获取数据
     const { problemId, language } = req.body;
     const { originalname, mimetype, size, path } = req.file;
 
-    // 3. 创建一个新的 File (提交记录) 文档
     const newSubmission = new File({
       filename: originalname,
       contentType: mimetype,
       size: size,
-      filePath: path, // 存储文件路径
-      type: 'submission', // 类型为提交
-      status: 'Pending',  // 初始状态为等待评测
+      filePath: path,
+      type: 'submission',
+      status: 'Pending',
       problemId: problemId,
       language: language
     });
 
-    // 4. 保存到数据库
     const savedSubmission = await newSubmission.save();
 
-    // 5. 按照前端期望的格式返回响应
+    // 2. 立即返回响应给前端
     res.status(201).json({
       submissionId: savedSubmission._id,
       initialStatus: 'Pending'
     });
+
+    // 3. 在后台“触发”评测任务，不等待它完成 (Fire and Forget)
+    judgeSubmission(savedSubmission._id);
 
   } catch (err) {
     console.error("Submission upload error:", err);
