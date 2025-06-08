@@ -32,8 +32,8 @@ export interface SubmissionListItem {
   problemTitle: string;
   status: SubmissionStatus;
   language: string;
-  time: number;
-  memory: number;
+  executionTime: number;
+  memoryUsage: number;
   submittedAt: string;
 }
 

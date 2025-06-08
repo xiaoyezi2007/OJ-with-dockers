@@ -42,7 +42,7 @@
       </template>
 
       <el-table :data="submissionStore.submissionHistory" style="width: 100%" v-loading="submissionStore.isLoadingHistory">
-        <el-table-column prop="submissionId" label="提交ID" width="180" align="center" show-overflow-tooltip />
+        <el-table-column prop="_id" label="提交ID" width="180" align="center" show-overflow-tooltip />
         <el-table-column label="题目" min-width="180" show-overflow-tooltip>
           <template #default="{ row }">
             <router-link :to="`/problem/${row.problemId}`" class="problem-link" v-if="row.problemId">
@@ -59,12 +59,12 @@
         <el-table-column prop="language" label="语言" width="100" align="center" />
         <el-table-column prop="time" label="耗时 (ms)" width="110" align="center">
           <template #default="{ row }">
-            {{ row.time !== undefined ? row.time : '-' }}
+            {{ row.executionTime !== undefined ? row.executionTime : '-' }}
           </template>
         </el-table-column>
         <el-table-column prop="memory" label="内存 (KB)" width="110" align="center">
           <template #default="{ row }">
-            {{ row.memory !== undefined ? row.memory : '-' }}
+            {{ row.memoryUsage !== undefined ? row.memoryUsage : '-' }}
           </template>
         </el-table-column>
         <el-table-column prop="createdAt" label="提交时间" width="170" align="center">
@@ -74,7 +74,7 @@
         </el-table-column>
         <el-table-column label="操作" width="100" align="center" fixed="right">
           <template #default="{ row }">
-            <el-button type="primary" link size="small" @click="viewSubmissionDetail(row.submissionId)">详情</el-button>
+            <el-button type="primary" link size="small" @click="viewSubmissionDetail(row._id)">详情</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -111,8 +111,8 @@
             </el-tag>
           </el-descriptions-item>
           <el-descriptions-item label="语言" label-class-name="detail-label-bold">{{ submissionStore.currentSubmissionDetail.language }}</el-descriptions-item>
-          <el-descriptions-item label="耗时" label-class-name="detail-label-bold">{{ submissionStore.currentSubmissionDetail.time !== undefined ? `${submissionStore.currentSubmissionDetail.time} ms` : '-' }}</el-descriptions-item>
-          <el-descriptions-item label="内存" label-class-name="detail-label-bold">{{ submissionStore.currentSubmissionDetail.memory !== undefined ? `${submissionStore.currentSubmissionDetail.memory} KB` : '-' }}</el-descriptions-item>
+          <el-descriptions-item label="耗时" label-class-name="detail-label-bold">{{ submissionStore.currentSubmissionDetail.executionTime !== undefined ? `${submissionStore.currentSubmissionDetail.executionTime} ms` : '-' }}</el-descriptions-item>
+          <el-descriptions-item label="内存" label-class-name="detail-label-bold">{{ submissionStore.currentSubmissionDetail.memoryUsage !== undefined ? `${submissionStore.currentSubmissionDetail.memoryUsage} KB` : '-' }}</el-descriptions-item>
           <el-descriptions-item label="提交时间" label-class-name="detail-label-bold">{{ formatDateTime(submissionStore.currentSubmissionDetail.createdAt) }}</el-descriptions-item>
           <el-descriptions-item label="评测时间" label-class-name="detail-label-bold">{{ formatDateTime(submissionStore.currentSubmissionDetail.judgedAt) }}</el-descriptions-item>
         </el-descriptions>
