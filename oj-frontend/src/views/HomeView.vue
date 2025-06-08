@@ -33,30 +33,7 @@
       </el-row>
     </section>
 
-    <section class="featured-content-section">
-      <div class="section-header">
-        <h2 class="scroll-animate-item" ref="featuredHeader">精选内容</h2>
-        <p class="scroll-animate-item" ref="featuredSubHeader" style="transition-delay: 100ms;">从我们的每日推荐和专题训练开始您的旅程。</p>
-      </div>
-      <el-row :gutter="30">
-        <el-col :xs="24" :md="12" v-for="(item, index) in featuredContent" :key="item.title"
-                ref="featuredCols"
-                class="scroll-animate-item"
-                :style="{'transition-delay': `${index * 150}ms`}">
-          <el-card class="featured-card" shadow="hover">
-            <template #header>
-              <div class="card-header">
-                <span>{{ item.title }}</span>
-              </div>
-            </template>
-            <p>{{ item.description }}</p>
-            <el-button type="primary" plain @click="goToProblemList" class="featured-button">
-              查看题目
-            </el-button>
-          </el-card>
-        </el-col>
-      </el-row>
-    </section>
+    
   </div>
 </template>
 
@@ -78,10 +55,7 @@ const features = [
   { icon: Stopwatch, title: '即时评测反馈', description: '提交代码后立即获得详细的运行结果和性能分析。' }
 ];
 
-const featuredContent = [
-  { title: '今日推荐：', description: '一道经典的入门题目，帮您快速熟悉平台操作流程和解题模式。', link: '/problem' },
-  { title: '专题训练：', description: '通过一系列精心设计的题目，助您攻克动态规划这一核心难点。', link: '/problem' }
-];
+
 
 
 
